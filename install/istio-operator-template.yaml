@@ -1,0 +1,52 @@
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+spec:
+  values:
+    global:
+      proxy:
+        autoInject: enabled
+      useMCP: false
+      jwtPolicy: first-party-jwt
+  addonComponents:
+    pilot:
+      enabled: true
+  components:
+    ingressGateways:
+      - name: istio-ingressgateway
+        enabled: true
+        k8s:
+          serviceAnnotations:
+            service.beta.kubernetes.io/aws-load-balancer-ssl-cert: "<INSTERT_CERTIFICATE_ARN_HERE>"
+            service.beta.kubernetes.io/aws-load-balancer-ssl-ports: https
+          service:
+            type: LoadBalancer
+            ports:
+            - port: 15020
+              name: status-port
+            - port: 15012
+              name: tcp-istiod
+            - port: 15443
+              name: tls
+            - port: 80
+              name: http2
+              targetPort: 8080
+            - port: 443
+              name: https
+              targetPort: 8080
+      - name: cluster-local-gateway
+        enabled: true
+        label:
+          istio: cluster-local-gateway
+          app: cluster-local-gateway
+        k8s:
+          service:
+            type: ClusterIP
+            ports:
+            - port: 15020
+              name: status-port
+            - port: 80
+              name: http2
+              targetPort: 8080
+            - port: 443
+              name: https
+              targetPort: 8443
