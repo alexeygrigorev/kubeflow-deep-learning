@@ -1,0 +1,16 @@
+apiVersion: "serving.kubeflow.org/v1alpha2"
+kind: "InferenceService"
+metadata:
+  name: "clothing-model"
+spec:
+  default:
+    predictor:
+      serviceAccountName: sa
+      tensorflow:
+        storageUri: "s3://mlbookcamp-models/clothing-model"
+    transformer:
+      custom:
+        container:
+          image: XXXXXXXXXXX.dkr.ecr.eu-west-1.amazonaws.com/model-serving:clothing-model-transformer
+          name: user-container
+

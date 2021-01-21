@@ -4,8 +4,9 @@ kind: ClusterConfig
 metadata:
   name: ml-bookcamp-eks
   region: eu-west-1
+  version: "1.18"
 
 nodeGroups:
   - name: ng
-    desiredCapacity: 1
+    desiredCapacity: 2
     instanceType: m5.xlarge
