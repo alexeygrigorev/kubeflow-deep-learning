@@ -347,7 +347,7 @@ spec:
 
 We add `serviceAccountName` and change the `storageUri` to use s3.
 
-## Prepare the model image
+## Prepare the model
 
 Now, let’s prepare the clothing model (it was trained [here](https://github.com/alexeygrigorev/mlbookcamp-code/blob/master/chapter-07-neural-nets/07-neural-nets-train.ipynb)).
 First, we need to download the model:
