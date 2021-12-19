@@ -1,10 +1,10 @@
-# Serving Deep Learning with KFServing 
+# Serving Deep Learning with KServe (Formely KFServing) 
 
 We’ll cover:
 
 - Configuring a domain for serving models
 - Creating an EKS cluster
-- Installing KFServing (without the entire Kubeflow)
+- Installing KServe (without the entire Kubeflow)
 - Serving the model
 - Creating a transformer for pre- and post-processing
 - Code: [https://github.com/alexeygrigorev/kubeflow-deep-learning](https://github.com/alexeygrigorev/kubeflow-deep-learning)
@@ -33,7 +33,7 @@ git clone git@github.com:alexeygrigorev/kubeflow-deep-learning.git
 We’ll use eksctl for creating a cluster.
 [More info](https://docs.aws.amazon.com/eks/latest/userguide/getting-started-eksctl.html).
 
-Create a config file (cluster.yaml):
+Create a config file (`cluster.yaml`):
 
 ```yaml
 apiVersion: eksctl.io/v1alpha5
@@ -151,6 +151,9 @@ Run the installation script:
 ```bash
 ./install.sh
 ```
+
+(Note that the script uses a relatively old istio - I didn't figure out how to make it work
+with the newer one. Reach out to me if you know how to do it or create a PR.)
 
 Next, we need it to use our domain. Create a config file for it
 (`config-domain.yaml`):
@@ -289,11 +292,13 @@ kubectl delete -f tf-flowers.yaml
 Let’s now deploy our own model.
 
 
-## Configure KF-Serving to use S3
+## Configure KServe to use S3
 
-We will save our model to S3, so KFServing will need to be able to
+We will save our model to S3, so KServe will need to be able to
 access it to fetch the model files. We need to do it by providing
-credentials. (Not sure if it can use a role, if it can, please let me
+credentials.
+
+(Not sure if it can use a role, if it can, please let me
 know and I’ll update the tutorial).
 
 The credentials need to be encoded with base64. Let’s do it:
@@ -362,8 +367,8 @@ We add `serviceAccountName` and change the `storageUri` to use s3.
 ## Prepare the model
 
 Now, let’s prepare the clothing model (it was trained [here](https://github.com/alexeygrigorev/mlbookcamp-code/blob/master/chapter-07-neural-nets/07-neural-nets-train.ipynb)).
-First, we need to download the model:
 
+First, we need to download the model:
 
 ```bash
 wget http://bit.ly/mlbookcamp-clothing-model -O xception_v4_large_08_0.894.h5
@@ -457,7 +462,7 @@ laptop — changes in DNS may need some time to propagate.
 
 ## Using the model
 
-Let’s test it. Create a script for that, `test.py`:
+Let’s test it. Create a script for that (`test.py`):
 
 ```python
 import requests
@@ -545,6 +550,7 @@ In KServe, transformers are deployed separately from the model, so
 they can scale up independently. It’s good, because they do a different
 kind of work — the transformer is doing I/O work (fetching the image),
 while the model is doing compute work (the number crunching).
+
 
 ### Creating a transformer
 
