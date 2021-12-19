@@ -811,6 +811,13 @@ Use eksctl for that:
 eksctl delete cluster --name mlzoomcamp-eks
 ```
 
+If you see that some pods refuse to be deleted, it's probably because of 
+istio and knative. We can manually remove the namespaces with these pods:
+
+```bash
+kubectl delete namespace knative-serving istio-system
+```
+
 ## Acknowledgements
 
 I would like to thank António Bernardino and Theofilos Papapanagiotou for their help
