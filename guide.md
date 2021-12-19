@@ -802,7 +802,7 @@ Don’t forget to delete your cluster when you finish your experiments.
 Use eksctl for that:
 
 ```bash
-eksctl delete cluster --name ml-bookcamp-eks
+eksctl delete cluster --name mlzoomcamp-eks
 ```
 
 ## Acknowledgements
