@@ -823,4 +823,4 @@ I used some resources to put together this tutorial:
 - The official guide for installing Kubeflow on EKS:
   [https://www.kubeflow.org/docs/aws/aws-e2e/](https://www.kubeflow.org/docs/aws/aws-e2e/)
 - [https://deploy.seldon.io/docs/getting-started/production-installation/standalone-kfserving/](https://deploy.seldon.io/docs/getting-started/production-installation/standalone-kfserving/)
-- [https://github.com/kubeflow/kfserving](https://github.com/kubeflow/kfserving)
+- [https://github.com/kserve/kserve](https://github.com/kserve/kserve)
