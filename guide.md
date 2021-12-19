@@ -1,4 +1,4 @@
-# Serving Deep Learning with KServe (Formely KFServing) 
+# Serving Deep Learning with KServe (Formerly KFServing) 
 
 We’ll cover:
 
