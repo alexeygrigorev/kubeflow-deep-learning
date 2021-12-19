@@ -1,6 +1,6 @@
 # Kubeflow Deep Learning
 
-Deployng a Keras model with KServe (formely KFServing) and EKS
+Deployng a Keras model with KServe (formerly KFServing) and EKS
 
 * Here's a detailed step-by-step guide for doing it: [guide.md](guide.md)
 * Want to talk about it? Join [DataTalks.Club](https://datatalks.club)
