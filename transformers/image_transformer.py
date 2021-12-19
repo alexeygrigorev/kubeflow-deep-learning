@@ -1,10 +1,10 @@
 import argparse
-import kfserving
+import kserve
 
 from keras_image_helper import create_preprocessor
 
 
-class ImageTransformer(kfserving.KFModel):
+class ImageTransformer(kserve.KFModel):
     def __init__(self, name, predictor_host):
         super().__init__(name)
         self.predictor_host = predictor_host
@@ -44,15 +44,13 @@ class ImageTransformer(kfserving.KFModel):
 
 
 if __name__ == "__main__":
-    DEFAULT_MODEL_NAME = "model"
-
-    parser = argparse.ArgumentParser(parents=[kfserving.kfserver.parser])
-    parser.add_argument('--model_name', default=DEFAULT_MODEL_NAME,
+    parser = argparse.ArgumentParser(parents=[kserve.kfserver.parser])
+    parser.add_argument('--model_name',
                         help='The name that the model is served under.')
     parser.add_argument('--predictor_host', help='The URL for the model predict function', required=True)
 
     args, _ = parser.parse_known_args()
 
     transformer = ImageTransformer(args.model_name, predictor_host=args.predictor_host)
-    kfserver = kfserving.KFServer()
-    kfserver.start(models=[transformer])
+    kserver = kserve.KFServer()
+    kserver.start(models=[transformer])

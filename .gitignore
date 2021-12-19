@@ -1,3 +1,3 @@
 clothing-model/
-install/kfserving-s3-secret.yaml
+install/kserve-s3-secret.yaml
 install/istio-operator.yaml

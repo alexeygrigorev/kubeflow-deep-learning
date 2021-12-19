@@ -1,9 +1,8 @@
-apiVersion: "serving.kubeflow.org/v1alpha2"
+apiVersion: "serving.kserve.io/v1beta1"
 kind: "InferenceService"
 metadata:
-  name: "flowers-sample"
+  name: "flower-sample"
 spec:
-  default:
-    predictor:
-      tensorflow:
-        storageUri: "gs://kfserving-samples/models/tensorflow/flowers"
+  predictor:
+    tensorflow:
+      storageUri: "gs://kfserving-samples/models/tensorflow/flowers"

@@ -2,22 +2,25 @@
 
 We’ll cover:
 
-  - Configuring a domain for serving models
-  - Creating an EKS cluster
-  - Installing KFServing (without the entire Kubeflow)
-  - Serving the model
-  - Creating a transformer for pre- and post-processing
-  - Code: [https://github.com/alexeygrigorev/kubeflow-deep-learning](https://github.com/alexeygrigorev/kubeflow-deep-learning)
-  - Join DataTalks.Club to talk about this tutorial: [https://datatalks.club/slack.html](https://datatalks.club/slack.html)
+- Configuring a domain for serving models
+- Creating an EKS cluster
+- Installing KFServing (without the entire Kubeflow)
+- Serving the model
+- Creating a transformer for pre- and post-processing
+- Code: [https://github.com/alexeygrigorev/kubeflow-deep-learning](https://github.com/alexeygrigorev/kubeflow-deep-learning)
+- Join DataTalks.Club to talk about this tutorial: [https://datatalks.club/slack.html](https://datatalks.club/slack.html)
+- Want to learn more about machine learning and deploying models? Check [Machine Leanring Zoomcamp](https://github.com/alexeygrigorev/mlbookcamp-code/tree/master/course-zoomcamp) - a free course about machine leanring engineering
+
 
 Prerequisites:
 
-  - Your own domain (maybe it’s possible to do it without a custom
-    domain, but I don’t know. Let me know if you find a way to do it)
-  - AWS cli
-  - Kubectl and eksctl installed (see [this tutorial](https://github.com/alexeygrigorev/kubernetes-deep-learning/blob/main/guide.md) for the instructions)
+- Your own domain (maybe it’s possible to do it without a custom
+  domain, but I don’t know. Let me know if you find a way to do it)
+- AWS cli
+- Kubectl and eksctl installed (see [this tutorial](https://github.com/alexeygrigorev/kubernetes-deep-learning/blob/main/guide.md) for the instructions)
 
-## Clone the Repo
+
+## Clone this Repo
 
 We’ll need some files from this repo:
 
@@ -37,15 +40,16 @@ apiVersion: eksctl.io/v1alpha5
 kind: ClusterConfig
 
 metadata:
-  name: ml-bookcamp-eks
+  name: mlzoomcamp-eks
   region: eu-west-1
-  version: "1.18"
 
 nodeGroups:
   - name: ng
     desiredCapacity: 2
     instanceType: m5.xlarge
 ```
+
+Change the region if needed.
 
 Apply it:
 
@@ -54,14 +58,14 @@ eksctl create cluster -f cluster.yaml
 ```
 
 It takes a while — up to 20 minutes. In the meantime, you can do the
-next steps (configuring a subdomain and certificate manager)
+next steps (configuring a subdomain and certificate manager).
 
 It should create a cluster and put the config to `~/.kube/config`. If
 there’s an error and it doesn’t create the config file, create it with
 AWS cli:
 
 ```bash
-aws eks --region eu-west-1 update-kubeconfig --name ml-bookcamp-eks
+aws eks --region eu-west-1 update-kubeconfig --name mlzoomcamp-eks
 ```
 
 Verify that you can connect to the cluster:
@@ -123,15 +127,17 @@ Take a note of the certificate’s ARN. We’ll need it for the next step.
 
 <img src="./media/image6.png" />
 
-## Install KFServing
+
+## Install KServe
 
 
 We’ll use the quick install script. It will install
 
-  - Istio
-  - KNative Serving
-  - Cert manager
-  - KFServing
+- Istio
+- KNative Serving
+- Cert manager
+- KServe
+
 
 Go to the `install` directory. First, rename
 `istio-operator-template.yaml` to `istio-operator.yaml`
@@ -159,6 +165,8 @@ data:
   kubeflow.mlbookcamp.com: ""
 ```
 
+Replace "kubeflow.mlbookcamp.com" with your domain name.
+
 Apply it:
 
 ```bash
@@ -168,7 +176,7 @@ kubectl apply -f config-domain.yaml
 Check that it installed correctly:
 
 ```bash
-kubectl get pod -n kfserving-system
+kubectl get pod -n kserve
 ```
 
 You should see:
@@ -194,33 +202,34 @@ Copy its DNS name.
 Then go to Route53, select the hosted zone we created previously and
 create a new CNAME record:
 
-  - Record name: `*` (asterisk)
-  - Record type: `CNAME`
-  - Value: the DNS name of the load balancer
+- Record name: `*` (asterisk)
+- Record type: `CNAME`
+- Value: the DNS name of the load balancer
 
 <img src="./media/image7.png" />
 
-Now this domain can be used by KF-Serving.
+Now this domain can be used by KServe.
+
+> Note: it may take some time before the DNS name could be reachable
+> from your computer
 
 
-## Deploying a test model to KFServing
+## Deploying a test model to KServe
 
 This step is optional. Feel free to jump to the next section.
 
-Let’s deploy a simple model. Create a config ("tf-flowers.yaml" - we copied it from [KFServing repo](https://github.com/kubeflow/kfserving/blob/master/docs/samples/v1beta1/tensorflow/tensorflow.yaml))
+Let’s deploy a simple model. Create a config ("tf-flowers.yaml" - we copied it from [KServe repo](https://github.com/kserve/kserve/blob/master/docs/samples/v1beta1/tensorflow/tensorflow.yaml))
 with this content:
 
-
 ```yaml
-apiVersion: "serving.kubeflow.org/v1alpha2"
+apiVersion: "serving.kserve.io/v1beta1"
 kind: "InferenceService"
 metadata:
-  name: "flowers-sample"
+  name: "flower-sample"
 spec:
-  default:
-    predictor:
-      tensorflow:
-        storageUri: "gs://kfserving-samples/models/tensorflow/flowers"
+  predictor:
+    tensorflow:
+      storageUri: "gs://kfserving-samples/models/tensorflow/flowers"
 ```
 
 Apply it:
@@ -242,10 +251,13 @@ NAME             URL                                                            
 flowers-sample   http://flowers-sample.default.kubeflow.mlbookcamp.com/v1/models/flowers-sample   True    100                                45m
 ```
 
+It might take a few minutes before you see that it's ready (`READY` is `True`).
+
+
 Test it with curl:
 
 ```bash
-MODEL="flowers-sample"
+MODEL="flower-sample"
 DOMAIN="kubeflow.mlbookcamp.com"
 
 curl -X POST \
@@ -253,7 +265,6 @@ curl -X POST \
     -d @flowers-input.json \
     https://${MODEL}.default.${DOMAIN}/v1/models/${MODEL}:predict 
 ```
-
 
 The output:
 
@@ -289,11 +300,12 @@ The credentials need to be encoded with base64. Let’s do it:
 
 ```bash
 echo -ne ${AWS_ACCESS_KEY_ID} | base64
-echo -ne ${AWS_ACCESS_KEY_ID} | base64
+echo -ne ${AWS_SECRET_ACCESS_KEY} | base64
 ```
 
-Now create a config with secrets (`kfserving-s3-secret.yaml`). Change
-the region if you need:
+Now create a config with secrets (`kserve-s3-secret.yaml` - or copy
+`install/kserve-s3-secret-template.yaml` and modify it). 
+Change the region if you need:
 
 ```yaml
 apiVersion: v1
@@ -301,48 +313,48 @@ kind: Secret
 metadata:
   name: mysecret
   annotations:
-    serving.kubeflow.org/s3-endpoint: s3.eu-west-1.amazonaws.com
-    serving.kubeflow.org/s3-usehttps: "1"
-    serving.kubeflow.org/s3-verifyssl: "1"
-    serving.kubeflow.org/s3-region: eu-west-1
+    serving.kserve.io/s3-endpoint: s3.eu-west-1.amazonaws.com
+    serving.kserve.io/s3-usehttps: "1"
+    serving.kserve.io/s3-verifyssl: "1"
+    serving.kserve.io/s3-region: eu-west-1
+    serving.kserve.io/s3-useanoncredential: "false"
 type: Opaque
 data:
-  # put your encoded key and secret here
-  awsAccessKeyID: QUtJQVhxxxVXVjQ=
-  awsSecretAccessKey: QzR0UnxxxVNOd0NQQQ==
+  # echo -ne "AKIAxxx" | base64
+  AWS_ACCESS_KEY_ID: INSERT_BAS64_KEY_HERE
+  AWS_SECRET_ACCESS_KEY: INSERT_BASE64_SECRET_HERE
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: sa
 secrets:
-  - name: s3credentials
+  - name: mysecret
 ```
 
 Apply it:
 
 
 ```bash
-kubectl apply -f kfserving-s3-secret.yaml
+kubectl apply -f kserve-s3-secret.yaml
 ```
 
 
-Now KF-serving will be able to fetch models from S3
+Now KServe will be able to fetch models from S3
 
 By the way, this is how the config for the test flowers model looks like
 when the models are in S3:
 
 ```yaml
-apiVersion: "serving.kubeflow.org/v1alpha2"
+apiVersion: "serving.kserve.io/v1beta1"
 kind: "InferenceService"
 metadata:
-  name: "flowers-sample"
+  name: "flower-sample"
 spec:
-  default:
-    predictor:
-      serviceAccountName: sa
-      tensorflow:
-        storageUri: "s3://mlbookcamp-models/flowers"
+  predictor:
+    serviceAccountName: sa
+    tensorflow:
+      storageUri: "s3://mlbookcamp-models/flowers"
 ```
 
 We add `serviceAccountName` and change the `storageUri` to use s3.
@@ -354,7 +366,7 @@ First, we need to download the model:
 
 
 ```bash
-wget http://bit.ly/mlbookcamp-clothing-model
+wget http://bit.ly/mlbookcamp-clothing-model -O xception_v4_large_08_0.894.h5
 ```
 
 Convert it to the "saved_model" format. Put this to `convert.py`:
@@ -403,16 +415,15 @@ model.
 Let’s deploy the model. Create a config file (`tf-clothing-base.yaml`):
 
 ```yaml
-apiVersion: "serving.kubeflow.org/v1beta1"
+apiVersion: "serving.kserve.io/v1beta1"
 kind: "InferenceService"
 metadata:
   name: "clothing-model"
 spec:
-  default:
-    predictor:
-      serviceAccountName: sa
-      tensorflow:
-        storageUri: "s3://mlbookcamp-models/clothing-model"
+  predictor:
+    serviceAccountName: sa
+    tensorflow:
+      storageUri: "s3://mlbookcamp-models/clothing-model"
 ```
 
 Apply it:
@@ -437,8 +448,8 @@ clothing-model   http://clothing-model.default.kubeflow.mlbookcamp.com/v1/models
 
 Take a note of the host and the model name:
 
-  - The host: "clothing-model.default.kubeflow.mlbookcamp.com"
-  - The model name: "clothing-model"
+- The host: "clothing-model.default.kubeflow.mlbookcamp.com"
+- The model name: "clothing-model"
 
 Note: It may take some time before the model is reachable from your
 laptop — changes in DNS may need some time to propagate.
@@ -461,6 +472,7 @@ X = preprocessor.from_url(image_url)
 data = {
     "instances": X.tolist()
 }
+
 resp = requests.post(url, json=data)
 
 results = resp.json()
@@ -505,13 +517,13 @@ Output:
 't-shirt': -4.83504581}
 ```
 
-## KF-Serving Transformers
+## KServe Transformers
 
 With the previous setup we have a few problems:
 
-  - We need to prepare the data on the client
-  - We do post-processing on the client as well to find out which
-    class it is
+- We need to prepare the data on the client
+- We do post-processing on the client as well to find out which
+  class it is
 
 Instead, we can do it on the KFSeving side using Transformers.
 
@@ -524,34 +536,39 @@ for the images.
 
 In the transformer:
 
-  - Pre-processing: convert the URL to a NumPy array and then a list
-    of floats
-  - Post-processing: convert the raw predictions to predictions with
-    labels
+- Pre-processing: convert the URL to a NumPy array and then a list
+  of floats
+- Post-processing: convert the raw predictions to predictions with
+  labels
 
-In KFServing, transformers are deployed separately from the model, so
+In KServe, transformers are deployed separately from the model, so
 they can scale up independently. It’s good, because they do a different
 kind of work — the transformer is doing I/O work (fetching the image),
 while the model is doing compute work (the number crunching).
 
-To do it, we’ll need to install the kfserving package for python:
+### Creating a transformer
+
+> Note: you can skip this part and use a tranformer that we
+> already prepared
+
+To do it, we’ll need to install the kserve package for python:
 
 ```bash
-pip install kfserving
+pip install kserve
 ```
 
-To define a transformer, we need to extend the kfserving.Model class.
+To define a transformer, we need to extend the `kserve.Model` class.
 Let's create a python file with that ("image_transformer.py"):
 
 
 ```python
 import argparse
-import kfserving
+import kserve
 
 from keras_image_helper import create_preprocessor
 
 
-class ImageTransformer(kfserving.KFModel):
+class ImageTransformer(kserve.KFModel):
     def __init__(self, name, predictor_host):
         super().__init__(name)
         self.predictor_host = predictor_host
@@ -591,7 +608,7 @@ class ImageTransformer(kfserving.KFModel):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(parents=[kfserving.kfserver.parser])
+    parser = argparse.ArgumentParser(parents=[kserve.kfserver.parser])
     parser.add_argument('--model_name',
                         help='The name that the model is served under.')
     parser.add_argument('--predictor_host', help='The URL for the model predict function', required=True)
@@ -599,8 +616,8 @@ if __name__ == "__main__":
     args, _ = parser.parse_known_args()
 
     transformer = ImageTransformer(args.model_name, predictor_host=args.predictor_host)
-    kfserver = kfserving.KFServer()
-    kfserver.start(models=[transformer])
+    kserver = kserve.KFServer()
+    kserver.start(models=[transformer])
 ```
 
 
@@ -653,11 +670,11 @@ Now let’s prepare a docker file for the tranformer ("transformer.dockerfile"):
 
 
 ```docker
-FROM python:3.7-slim
+FROM python:3.8-slim
 
 RUN pip install --upgrade pip
 
-RUN pip install kfserving>=0.2.1 \
+RUN pip install kserve>=0.7.0 \
     argparse>=1.4.0 \
     pillow==7.1.0 \
     keras_image_helper==0.0.1
@@ -695,10 +712,10 @@ Before using this new transformer, let’s delete the old inference
 service first:
 
 ```bash
-kc delete -f tf-clothing.yaml
+kubectl delete -f tf-clothing-base.yaml
 ```
 
-Now let’s adjust the definition:
+Now let’s adjust the definition (`tf-clothing-transformer.yaml`):
 
 ```yaml
 apiVersion: "serving.kubeflow.org/v1alpha2"
@@ -722,7 +739,7 @@ Apply it
 
 
 ```bash
-kubectl apply -f tf-clothing.yaml
+kubectl apply -f tf-clothing-transformer.yaml
 ```
 
 Update the url in the "test-transformer.py" script:
@@ -747,6 +764,7 @@ Response:
 -2.60233665, 't-shirt': -4.83504581}]}
 ```
 
+### Using existing transformer
 
 Instead of creating your own tranformer, you can use an existing one:
 
@@ -796,7 +814,7 @@ and suggestions. You saved me days of work.
 
 I used some resources to put together this tutorial:
 
-  - > The official guide for installing Kubeflow on EKS:
-    > [https://www.kubeflow.org/docs/aws/aws-e2e/](https://www.kubeflow.org/docs/aws/aws-e2e/)
-  - > [https://deploy.seldon.io/docs/getting-started/production-installation/standalone-kfserving/](https://deploy.seldon.io/docs/getting-started/production-installation/standalone-kfserving/)
-  - > [https://github.com/kubeflow/kfserving](https://github.com/kubeflow/kfserving)
+- The official guide for installing Kubeflow on EKS:
+  [https://www.kubeflow.org/docs/aws/aws-e2e/](https://www.kubeflow.org/docs/aws/aws-e2e/)
+- [https://deploy.seldon.io/docs/getting-started/production-installation/standalone-kfserving/](https://deploy.seldon.io/docs/getting-started/production-installation/standalone-kfserving/)
+- [https://github.com/kubeflow/kfserving](https://github.com/kubeflow/kfserving)
