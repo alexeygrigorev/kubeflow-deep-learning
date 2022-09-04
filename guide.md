@@ -109,7 +109,7 @@ each:
 
 ## Configuring Certificate Manager
 
-To access the endpoint with http, you’ll need to create a certificate.
+To access the endpoint with HTTPS, you’ll need to create a certificate.
 
 Go to Certificate Manager and select “Provision certificates”. Choose
 “Request a public certificate”, click “request a certificate”. Choose
