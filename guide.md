@@ -42,6 +42,7 @@ kind: ClusterConfig
 metadata:
   name: mlzoomcamp-eks
   region: eu-west-1
+  version: "1.21"
 
 nodeGroups:
   - name: ng
@@ -232,7 +233,7 @@ metadata:
 spec:
   predictor:
     tensorflow:
-      storageUri: "gs://kfserving-samples/models/tensorflow/flowers"
+      storageUri: "gs://kfserving-examples/models/tensorflow/flowers"
 ```
 
 Apply it:
@@ -337,6 +338,14 @@ secrets:
   - name: mysecret
 ```
 
+Note: if you're on Windows, make sure the line endings are LF, not CRLF:
+
+```bash
+dos2unix kserve-s3-secret.yaml
+```
+
+(This can sometimes result in "\r" creeping into your secrets)
+
 Apply it:
 
 
@@ -363,6 +372,24 @@ spec:
 ```
 
 We add `serviceAccountName` and change the `storageUri` to use s3.
+
+Apply it:
+
+```bash
+kubectl apply -f tf-flowers-s3.yaml
+```
+
+Test it:
+
+```bash
+MODEL="flower-sample"
+DOMAIN="kubeflow.mlbookcamp.com"
+
+curl -X POST \
+    -H 'Content-Type: application/json' \
+    -d @flowers-input.json \
+    https://${MODEL}.default.${DOMAIN}/v1/models/${MODEL}:predict
+```
 
 ## Prepare the model
 
